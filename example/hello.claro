@@ -40,7 +40,7 @@ alias Env : {string: Value}
 # ------------------------------------------------------------------------------
 # Values
 # ------------------------------------------------------------------------------
-newtype Closure : struct { fun: Expr, env: Env }
+newtype Closure : struct { fun: Fun, env: Env }
 
 newtype Value : oneof<Num, Closure>
 
