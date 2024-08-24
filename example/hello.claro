@@ -1,0 +1,74 @@
+# ------------------------------------------------------------------------------
+# Tokens
+# ------------------------------------------------------------------------------
+atom LET
+atom VAL
+atom IN
+atom END
+newtype NUM : int
+
+newtype Token : oneof<
+  LET,
+  VAL,
+  IN,
+  END,
+  NUM
+>
+
+# ------------------------------------------------------------------------------
+# AST
+# ------------------------------------------------------------------------------
+newtype Num : int
+newtype Var : string
+newtype Fun : struct { param: string, body: Expr }
+newtype App : struct { fun: Expr, arg: Expr }
+newtype Let : struct { name: string, value: Expr, body: Expr }
+
+newtype Expr : oneof<
+  Num,
+  Var,
+  Fun,
+  App,
+  Let
+>
+
+# ------------------------------------------------------------------------------
+# Environments
+# ------------------------------------------------------------------------------
+alias Env : {string: Value}
+
+# ------------------------------------------------------------------------------
+# Values
+# ------------------------------------------------------------------------------
+newtype Closure : struct { fun: Expr, env: Env }
+
+newtype Value : oneof<Num, Closure>
+
+function eval(expr: Expr, env: Env) -> Value {
+  match (expr) {
+    case n: Num -> return n;
+    case v: Var -> return env[unwrap(v)];
+  }
+}
+
+blocking consumer repl(prompt: string, stdin: scanner::Scanner) {
+  var t: Token = Token(NUM(42));
+  print("token: {t}");
+
+  while (true) {
+    print(prompt);
+
+    match (scanner::nextLine(stdin)) {
+      case _: scanner::INPUT_MISMATCH -> print("input mismatch"); break;
+      case _: scanner::NO_MORE_TOKENS -> break;
+      case line ->
+        if ((line == ":q") or (line == ":quit")) {
+          break;
+        } else {
+          print("line: '{line}'");
+        }
+    }
+  }
+}
+
+repl("repl> ", scanner::forStdIn());
